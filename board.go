@@ -47,10 +47,11 @@ type Board struct {
 	winner                  WinState
 	children                []*Board
 	lastMoveString          string
+	moveCounter             int
 }
 
 //BoardInitialise initialises a Board
-func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, canBlackKingSideCastle, canBlackQueenSideCastle, canWhiteKingSideCastle, canWhiteQueenSideCastle bool, lastMoveString string) Board {
+func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, canBlackKingSideCastle, canBlackQueenSideCastle, canWhiteKingSideCastle, canWhiteQueenSideCastle bool, lastMoveString string, moveCounter int) Board {
 	squares := make([][]*Piece, 8)
 	for i := 0; i < 8; i++ {
 		squares[i] = make([]*Piece, 8)
@@ -81,6 +82,7 @@ func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, ca
 		Undecided,
 		[]*Board{},
 		lastMoveString,
+		moveCounter,
 	}
 
 	returnState.coveredSquaresWhite = returnState.getCoveredSquares(White)
@@ -133,7 +135,7 @@ func NewBoard() Board {
 		pieces = append(pieces, &Piece{pawn, Black, Vector{x: i, y: 6}})
 	}
 
-	return BoardInitialise(pieces, -1, White, true, true, true, true, "")
+	return BoardInitialise(pieces, -1, White, true, true, true, true, "", 1)
 }
 
 func (boardState Board) getCoveredSquares(colour Colour) [][]bool {
@@ -180,6 +182,38 @@ func (boardState Board) isBlackCheckmated() bool {
 
 func (boardState Board) isStalemate() bool {
 	return !boardState.isBlackChecked && !boardState.isWhiteChecked && len(boardState.getPossibleMoves()) == 0
+}
+
+func (boardState Board) checkSufficientMaterial(colour Colour) bool {
+	nCount := 0
+	bCount := 0
+	hasRook := false
+	hasBishopOrPawn := true
+
+	for _, piece := range boardState.pieces {
+		if piece.colour == colour {
+			if piece.pieceType.sign == "p" || piece.pieceType.sign == "q" || piece.pieceType.sign == "r" {
+				return true
+			}
+			if piece.pieceType.sign == "n" {
+				nCount++
+			}
+			if piece.pieceType.sign == "b" {
+				bCount++
+			}
+		} else {
+			if piece.pieceType.sign == "r" {
+				hasRook = true
+			}
+			if piece.pieceType.sign == "b" || piece.pieceType.sign == "p" {
+				hasBishopOrPawn = true
+			}
+		}
+		if nCount+bCount > 1 || (nCount == 1 && (hasRook || hasBishopOrPawn)) || (bCount == 1 && hasBishopOrPawn) {
+			return true
+		}
+	}
+	return false
 }
 
 //ToString converts board to string
@@ -264,6 +298,7 @@ func (boardState Board) clone() Board {
 		boardState.winner,
 		boardState.children,
 		boardState.lastMoveString,
+		boardState.moveCounter,
 	}
 }
 
