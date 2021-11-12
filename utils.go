@@ -28,6 +28,10 @@ func (vect1 Vector) toString() string {
 	return fmt.Sprintf("(%d, %d)", vect1.x, vect1.y)
 }
 
+func (vect1 Vector) boardPosition() string {
+	return fmt.Sprintf("%s%d", string(rune('a'+vect1.x)), vect1.y+1)
+}
+
 func geometricAbs(value float64) float64 {
 	if value >= 1 {
 		return value
