@@ -194,7 +194,7 @@ func verySimpleHeuristic(board Board) float64 {
 				nextPieceValue += (7.0 - float64(piece.position.y)) * 0.1
 			}
 		}
-		if piece.pieceType.sign == "Kn" {
+		if piece.pieceType.sign == "N" {
 			nextPieceValue = 3.0
 		}
 		if piece.pieceType.sign == "B" {

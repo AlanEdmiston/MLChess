@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -47,10 +48,12 @@ type Board struct {
 	winner                  WinState
 	children                []*Board
 	lastMoveString          string
+	moveCounter             int
+	fiftyMoveCounter        int
 }
 
 //BoardInitialise initialises a Board
-func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, canBlackKingSideCastle, canBlackQueenSideCastle, canWhiteKingSideCastle, canWhiteQueenSideCastle bool, lastMoveString string) Board {
+func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, canBlackKingSideCastle, canBlackQueenSideCastle, canWhiteKingSideCastle, canWhiteQueenSideCastle bool, lastMoveString string, moveCounter, fiftyMoveCounter int) Board {
 	squares := make([][]*Piece, 8)
 	for i := 0; i < 8; i++ {
 		squares[i] = make([]*Piece, 8)
@@ -81,6 +84,8 @@ func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, ca
 		Undecided,
 		[]*Board{},
 		lastMoveString,
+		moveCounter,
+		fiftyMoveCounter,
 	}
 
 	returnState.coveredSquaresWhite = returnState.getCoveredSquares(White)
@@ -133,7 +138,7 @@ func NewBoard() Board {
 		pieces = append(pieces, &Piece{pawn, Black, Vector{x: i, y: 6}})
 	}
 
-	return BoardInitialise(pieces, -1, White, true, true, true, true, "")
+	return BoardInitialise(pieces, -1, White, true, true, true, true, "", 1, 0)
 }
 
 func (boardState Board) getCoveredSquares(colour Colour) [][]bool {
@@ -154,7 +159,7 @@ func (boardState Board) getCoveredSquares(colour Colour) [][]bool {
 
 func (boardState Board) getIsWhiteChecked() bool {
 	for _, piece := range boardState.pieces {
-		if piece.pieceType.sign == "k" && piece.colour == White {
+		if piece.pieceType.sign == "K" && piece.colour == White {
 			return boardState.coveredSquaresBlack[piece.position.x][piece.position.y]
 		}
 	}
@@ -163,7 +168,7 @@ func (boardState Board) getIsWhiteChecked() bool {
 
 func (boardState Board) getIsBlackChecked() bool {
 	for _, piece := range boardState.pieces {
-		if piece.pieceType.sign == "k" && piece.colour == Black {
+		if piece.pieceType.sign == "K" && piece.colour == Black {
 			return boardState.coveredSquaresWhite[piece.position.x][piece.position.y]
 		}
 	}
@@ -179,7 +184,40 @@ func (boardState Board) isBlackCheckmated() bool {
 }
 
 func (boardState Board) isStalemate() bool {
-	return !boardState.isBlackChecked && !boardState.isWhiteChecked && len(boardState.getPossibleMoves()) == 0
+	return (!boardState.isBlackChecked && !boardState.isWhiteChecked && len(boardState.getPossibleMoves()) == 0) ||
+		boardState.checkSufficientMaterial(Black) || boardState.checkSufficientMaterial(White) || boardState.fiftyMoveCounter >= 100
+}
+
+func (boardState Board) checkSufficientMaterial(colour Colour) bool {
+	nCount := 0
+	bCount := 0
+	hasRook := false
+	hasBishopOrPawn := true
+
+	for _, piece := range boardState.pieces {
+		if piece.colour == colour {
+			if piece.pieceType.sign == "P" || piece.pieceType.sign == "Q" || piece.pieceType.sign == "R" {
+				return true
+			}
+			if piece.pieceType.sign == "N" {
+				nCount++
+			}
+			if piece.pieceType.sign == "B" {
+				bCount++
+			}
+		} else {
+			if piece.pieceType.sign == "R" {
+				hasRook = true
+			}
+			if piece.pieceType.sign == "B" || piece.pieceType.sign == "P" {
+				hasBishopOrPawn = true
+			}
+		}
+		if nCount+bCount > 1 || (nCount == 1 && (hasRook || hasBishopOrPawn)) || (bCount == 1 && hasBishopOrPawn) {
+			return true
+		}
+	}
+	return false
 }
 
 //ToString converts board to string
@@ -232,6 +270,7 @@ func (boardState Board) ToString() string {
 		out += "-"
 	}
 
+	out += fmt.Sprintf(" %d %d", boardState.fiftyMoveCounter, boardState.moveCounter)
 	return out
 }
 
@@ -264,6 +303,8 @@ func (boardState Board) clone() Board {
 		boardState.winner,
 		boardState.children,
 		boardState.lastMoveString,
+		boardState.moveCounter,
+		boardState.fiftyMoveCounter,
 	}
 }
 
@@ -273,8 +314,11 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 	pieceDouble := nextState.getSquare(piece.position.x, piece.position.y)
 	nextState.lastMoveString = strings.ToUpper(piece.pieceType.sign) + piece.position.boardPosition() + move.boardPosition() + " "
 
+	nextState.fiftyMoveCounter++
+
 	//remove taken piece
 	if nextState.getSquare(move.x, move.y) != nil {
+		nextState.fiftyMoveCounter = 0
 		for i, piece2 := range nextState.pieces {
 			if piece2.position.x == move.x && piece2.position.y == move.y {
 				nextState.pieces[i] = nextState.pieces[len(nextState.pieces)-1]
@@ -283,9 +327,12 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 			}
 		}
 	}
+	if piece.pieceType.sign == "P" {
+		nextState.fiftyMoveCounter = 0
+	}
 
 	//update board en passant rank
-	if pieceDouble.pieceType.sign == "p" && piece.position.y%5 == 1 && (move.y == 3 || move.y == 4) {
+	if pieceDouble.pieceType.sign == "P" && piece.position.y%5 == 1 && (move.y == 3 || move.y == 4) {
 		nextState.enPassantRank = piece.position.x
 	} else {
 		nextState.enPassantRank = -1
@@ -312,7 +359,7 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 	}
 
 	//do promotions
-	if ((move.y == 0 && piece.colour == Black) || (move.y == 7 && piece.colour == White)) && piece.pieceType.sign == "p" {
+	if ((move.y == 0 && piece.colour == Black) || (move.y == 7 && piece.colour == White)) && piece.pieceType.sign == "P" {
 		if promotion == nil {
 			println(errors.New("promotion needs to be defined"))
 			return nextState
@@ -323,7 +370,7 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 	}
 
 	//castling
-	if pieceDouble.pieceType.sign == "k" {
+	if pieceDouble.pieceType.sign == "K" {
 		if move.x == 2 {
 			if pieceDouble.colour == White && nextState.canWhiteQueenSideCastle {
 				nextState.getSquare(0, 0).position.x = 3
@@ -353,7 +400,7 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 	nextState.isWhiteChecked = nextState.getIsWhiteChecked()
 
 	//update castling state
-	if pieceDouble.pieceType.sign == "k" {
+	if pieceDouble.pieceType.sign == "K" {
 		if pieceDouble.colour == White {
 			nextState.canWhiteKingSideCastle = false
 			nextState.canWhiteQueenSideCastle = false
@@ -363,7 +410,7 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 		}
 	}
 
-	if pieceDouble.pieceType.sign == "r" {
+	if pieceDouble.pieceType.sign == "R" {
 		if pieceDouble.colour == White {
 			if piece.position.x == 7 && pieceDouble.position.y == 0 {
 				nextState.canWhiteKingSideCastle = false
@@ -396,6 +443,7 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 
 	if nextState.colourToMove == White {
 		nextState.colourToMove = Black
+		nextState.moveCounter++
 	} else {
 		nextState.colourToMove = White
 	}
@@ -409,7 +457,7 @@ func (boardState Board) getPossibleMoves() []*Board {
 		if piece.colour == boardState.colourToMove {
 			moves := piece.getPossibleMoves(boardState)
 			for _, move := range moves {
-				if piece.pieceType.sign == "p" && (move.y == 0 || move.y == 7) {
+				if piece.pieceType.sign == "P" && (move.y == 0 || move.y == 7) {
 					nextState := boardState.MakeMove(piece, move, &knight)
 					if nextState.verifyBoardState() {
 						returnStates = append(returnStates, &nextState)
