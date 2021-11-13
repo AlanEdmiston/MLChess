@@ -315,7 +315,7 @@ var pawn = PieceType{"P", []Vector{}, []Vector{}}
 
 var rook = PieceType{"R", []Vector{{0, 1}, {1, 0}}, []Vector{}}
 
-var knight = PieceType{"Kn", []Vector{}, []Vector{{2, 1}, {-2, 1}, {2, -1}, {-2, -1}, {1, 2}, {-1, 2}, {1, -2}, {-1, -2}}}
+var knight = PieceType{"N", []Vector{}, []Vector{{2, 1}, {-2, 1}, {2, -1}, {-2, -1}, {1, 2}, {-1, 2}, {1, -2}, {-1, -2}}}
 
 var bishop = PieceType{"B", []Vector{{-1, 1}, {1, 1}}, []Vector{}}
 
