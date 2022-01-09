@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -47,10 +48,12 @@ type Board struct {
 	winner                  WinState
 	children                []*Board
 	lastMoveString          string
+	moveCounter             int
+	fiftyMoveCounter        int
 }
 
 //BoardInitialise initialises a Board
-func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, canBlackKingSideCastle, canBlackQueenSideCastle, canWhiteKingSideCastle, canWhiteQueenSideCastle bool, lastMoveString string) Board {
+func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, canBlackKingSideCastle, canBlackQueenSideCastle, canWhiteKingSideCastle, canWhiteQueenSideCastle bool, lastMoveString string, moveCounter, fiftyMoveCounter int) Board {
 	squares := make([][]*Piece, 8)
 	for i := 0; i < 8; i++ {
 		squares[i] = make([]*Piece, 8)
@@ -81,6 +84,8 @@ func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, ca
 		Undecided,
 		[]*Board{},
 		lastMoveString,
+		moveCounter,
+		fiftyMoveCounter,
 	}
 
 	returnState.coveredSquaresWhite = returnState.getCoveredSquares(White)
@@ -133,7 +138,7 @@ func NewBoard() Board {
 		pieces = append(pieces, &Piece{pawn, Black, Vector{X: i, Y: 6}})
 	}
 
-	return BoardInitialise(pieces, -1, White, true, true, true, true, "")
+	return BoardInitialise(pieces, -1, White, true, true, true, true, "", 1, 0)
 }
 
 func (boardState Board) getCoveredSquares(colour Colour) [][]bool {
@@ -179,7 +184,40 @@ func (boardState Board) isBlackCheckmated() bool {
 }
 
 func (boardState Board) isStalemate() bool {
-	return !boardState.isBlackChecked && !boardState.isWhiteChecked && len(boardState.getPossibleMoves()) == 0
+	return (!boardState.isBlackChecked && !boardState.isWhiteChecked && len(boardState.getPossibleMoves()) == 0) ||
+		boardState.checkSufficientMaterial(Black) || boardState.checkSufficientMaterial(White) || boardState.fiftyMoveCounter >= 100
+}
+
+func (boardState Board) checkSufficientMaterial(colour Colour) bool {
+	nCount := 0
+	bCount := 0
+	hasRook := false
+	hasBishopOrPawn := true
+
+	for _, piece := range boardState.pieces {
+		if piece.colour == colour {
+			if piece.pieceType.sign == "P" || piece.pieceType.sign == "Q" || piece.pieceType.sign == "R" {
+				return true
+			}
+			if piece.pieceType.sign == "N" {
+				nCount++
+			}
+			if piece.pieceType.sign == "B" {
+				bCount++
+			}
+		} else {
+			if piece.pieceType.sign == "R" {
+				hasRook = true
+			}
+			if piece.pieceType.sign == "B" || piece.pieceType.sign == "P" {
+				hasBishopOrPawn = true
+			}
+		}
+		if nCount+bCount > 1 || (nCount == 1 && (hasRook || hasBishopOrPawn)) || (bCount == 1 && hasBishopOrPawn) {
+			return true
+		}
+	}
+	return false
 }
 
 //ToString converts board to string
@@ -232,6 +270,7 @@ func (boardState Board) ToString() string {
 		out += "-"
 	}
 
+	out += fmt.Sprintf(" %d %d", boardState.fiftyMoveCounter, boardState.moveCounter)
 	return out
 }
 
@@ -264,6 +303,8 @@ func (boardState Board) clone() Board {
 		boardState.winner,
 		boardState.children,
 		boardState.lastMoveString,
+		boardState.moveCounter,
+		boardState.fiftyMoveCounter,
 	}
 }
 
@@ -272,6 +313,8 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 	nextState := boardState.clone()
 	pieceDouble := nextState.getSquare(piece.position.X, piece.position.Y)
 	nextState.lastMoveString = strings.ToUpper(piece.pieceType.sign) + piece.position.boardPosition() + move.boardPosition() + " "
+
+	nextState.fiftyMoveCounter++
 
 	//remove taken piece
 	if nextState.getSquare(move.X, move.Y) != nil {
@@ -282,6 +325,9 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 				break
 			}
 		}
+	}
+	if piece.pieceType.sign == "P" {
+		nextState.fiftyMoveCounter = 0
 	}
 
 	//update board en passant rank
@@ -405,6 +451,7 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 
 	if nextState.colourToMove == White {
 		nextState.colourToMove = Black
+		nextState.moveCounter++
 	} else {
 		nextState.colourToMove = White
 	}
