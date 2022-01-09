@@ -12,7 +12,7 @@ func createBoardLayout(pieces []*Piece, enPassantRank int, castleBK bool, castle
 		squares[piece.position.X][piece.position.Y] = piece
 	}
 
-	return BoardInitialise(pieces, enPassantRank, colourToMove, castleBK, castleBQ, castleWK, castleWQ, "")
+	return BoardInitialise(pieces, enPassantRank, colourToMove, castleBK, castleBQ, castleWK, castleWQ, "", 0, 0)
 }
 
 //https://lichess.org/editor/8/ppk5/1pb5/3n4/8/6P1/PP2p3/1KR5_w_-_-_0_1
