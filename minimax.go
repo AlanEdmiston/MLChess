@@ -29,10 +29,10 @@ type MinimaxTree struct {
 	strategy      Strategy
 }
 
-func createRoot(height int, colour Colour, state *Board, strategy Strategy) MinimaxTree {
+func createRoot(height int, colour Colour, state *Board, strategy Strategy, config1, config2 Policy) MinimaxTree {
 
-	config1 := randomConfigGenerator()
-	config2 := randomConfigGenerator()
+	heurConfig1 := config1.HeauristicConfig.unmarshalJson()
+	heurConfig2 := config2.HeauristicConfig.unmarshalJson()
 
 	root := MinimaxTree{
 		children:     []*MinimaxTree{},
@@ -51,7 +51,7 @@ func createRoot(height int, colour Colour, state *Board, strategy Strategy) Mini
 	currentMove := root.state
 
 	for i, nextState := range root.state.children {
-		child := newMinimaxTree(*nextState, &root, &config1, &config2)
+		child := newMinimaxTree(*nextState, &root, &heurConfig1, &heurConfig2)
 		root.children = append(root.children, &child)
 		if i == 0 || (child.value > moveValue && root.isMaximising) || (child.value < moveValue && !root.isMaximising) {
 			moveValue = child.value
@@ -62,7 +62,7 @@ func createRoot(height int, colour Colour, state *Board, strategy Strategy) Mini
 	return root
 }
 
-func newMinimaxTree(boardState Board, parent *MinimaxTree, config1 *pieceValueConfig, config2 *pieceValueConfig) MinimaxTree {
+func newMinimaxTree(boardState Board, parent *MinimaxTree, config1 *PieceValueConfig, config2 *PieceValueConfig) MinimaxTree {
 	boardState.children = boardState.getPossibleMoves()
 
 	children := []*MinimaxTree{}
@@ -189,9 +189,9 @@ func verySimpleHeuristic(board Board) float64 {
 		if piece.pieceType.sign == "P" {
 			nextPieceValue = 1.0
 			if piece.colour == White {
-				nextPieceValue += float64(piece.position.y) * 0.1
+				nextPieceValue += float64(piece.position.Y) * 0.1
 			} else {
-				nextPieceValue += (7.0 - float64(piece.position.y)) * 0.1
+				nextPieceValue += (7.0 - float64(piece.position.Y)) * 0.1
 			}
 		}
 		if piece.pieceType.sign == "N" {

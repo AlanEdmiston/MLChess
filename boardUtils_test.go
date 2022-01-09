@@ -5,14 +5,14 @@ import "testing"
 //https://lichess.org/editor/3k4/Q7/4K3/p5r1/1p6/1P6/6p1/8_w_-_-_0_1
 func setUtilsTestBoardPosition() Board {
 	return createBoardLayout([]*Piece{
-		{queen, White, Vector{x: 0, y: 6}},
-		{king, White, Vector{x: 4, y: 5}},
-		{pawn, White, Vector{x: 1, y: 2}},
-		{rook, Black, Vector{x: 6, y: 4}},
-		{king, Black, Vector{x: 3, y: 7}},
-		{pawn, Black, Vector{x: 6, y: 1}},
-		{pawn, Black, Vector{x: 0, y: 4}},
-		{pawn, Black, Vector{x: 1, y: 3}},
+		{queen, White, Vector{X: 0, Y: 6}},
+		{king, White, Vector{X: 4, Y: 5}},
+		{pawn, White, Vector{X: 1, Y: 2}},
+		{rook, Black, Vector{X: 6, Y: 4}},
+		{king, Black, Vector{X: 3, Y: 7}},
+		{pawn, Black, Vector{X: 6, Y: 1}},
+		{pawn, Black, Vector{X: 0, Y: 4}},
+		{pawn, Black, Vector{X: 1, Y: 3}},
 	}, -1, false, false, false, false, White)
 }
 
@@ -77,10 +77,10 @@ func TestCanDetermineCheckmate(t *testing.T) {
 func TestCanDetermineStalemate(t *testing.T) {
 	//https://lichess.org/editor/6k1/4p3/4K2Q/8/8/8/8/8_w_-_-_0_1
 	state := createBoardLayout([]*Piece{
-		{queen, White, Vector{x: 7, y: 5}},
-		{king, White, Vector{x: 4, y: 5}},
-		{king, Black, Vector{x: 6, y: 7}},
-		{pawn, Black, Vector{x: 4, y: 6}},
+		{queen, White, Vector{X: 7, Y: 5}},
+		{king, White, Vector{X: 4, Y: 5}},
+		{king, Black, Vector{X: 6, Y: 7}},
+		{pawn, Black, Vector{X: 4, Y: 6}},
 	}, -1, false, false, false, false, Black)
 
 	if !state.isStalemate() {

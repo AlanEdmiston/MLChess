@@ -21,7 +21,7 @@ func (piece Piece) toString() string {
 }
 
 func (piece Piece) canPawnMoveTwo() bool {
-	if (piece.colour == White && piece.position.y == 1 && piece.pieceType.sign == "P") || (piece.colour == Black && piece.position.y == 6 && piece.pieceType.sign == "P") {
+	if (piece.colour == White && piece.position.Y == 1 && piece.pieceType.sign == "P") || (piece.colour == Black && piece.position.Y == 6 && piece.pieceType.sign == "P") {
 		return true
 	}
 	return false
@@ -30,18 +30,24 @@ func (piece Piece) canPawnMoveTwo() bool {
 func (piece Piece) getCastlingMoves(boardState Board) []Vector {
 	castlingMoves := []Vector{}
 	if piece.colour == White {
-		if boardState.canWhiteQueenSideCastle && boardState.getSquare(0, 1) == nil && boardState.getSquare(0, 2) == nil && boardState.getSquare(0, 3) == nil {
+		if boardState.isWhiteChecked {
+			return []Vector{}
+		}
+		if boardState.canWhiteQueenSideCastle && boardState.getSquare(1, 0) == nil && boardState.getSquare(2, 0) == nil && boardState.getSquare(3, 0) == nil {
 			castlingMoves = append(castlingMoves, Vector{0, 2})
 		}
-		if boardState.canWhiteKingSideCastle && boardState.getSquare(0, 5) == nil && boardState.getSquare(0, 6) == nil {
+		if boardState.canWhiteKingSideCastle && boardState.getSquare(5, 0) == nil && boardState.getSquare(6, 0) == nil {
 			castlingMoves = append(castlingMoves, Vector{0, 6})
 		}
 	} else {
-		if boardState.canBlackQueenSideCastle && boardState.getSquare(7, 1) == nil && boardState.getSquare(7, 2) == nil && boardState.getSquare(7, 3) == nil {
+		if boardState.isBlackChecked {
+			return []Vector{}
+		}
+		if boardState.canBlackQueenSideCastle && boardState.getSquare(1, 7) == nil && boardState.getSquare(2, 7) == nil && boardState.getSquare(3, 7) == nil {
 			castlingMoves = append(castlingMoves, Vector{7, 2})
 		}
-		if boardState.canBlackKingSideCastle && boardState.getSquare(7, 5) == nil && boardState.getSquare(7, 6) == nil {
-			castlingMoves = append(castlingMoves, Vector{7, 6})
+		if boardState.canBlackKingSideCastle && boardState.getSquare(5, 7) == nil && boardState.getSquare(6, 7) == nil {
+			castlingMoves = append(castlingMoves, Vector{6, 7})
 		}
 	}
 
@@ -56,13 +62,13 @@ func (piece Piece) getDirectionMoves(boardState Board) []Vector {
 			if moveTo.isOutOfBounds() {
 				break
 			}
-			if occupyingPiece := boardState.getSquare(moveTo.x, moveTo.y); occupyingPiece != nil {
+			if occupyingPiece := boardState.getSquare(moveTo.X, moveTo.Y); occupyingPiece != nil {
 				if occupyingPiece.colour != piece.colour {
-					foundMoves = append(foundMoves, Vector{moveTo.x, moveTo.y})
+					foundMoves = append(foundMoves, Vector{moveTo.X, moveTo.Y})
 				}
 				break
 			}
-			foundMoves = append(foundMoves, Vector{moveTo.x, moveTo.y})
+			foundMoves = append(foundMoves, Vector{moveTo.X, moveTo.Y})
 		}
 
 		for i := -1; i > -8; i-- {
@@ -70,13 +76,13 @@ func (piece Piece) getDirectionMoves(boardState Board) []Vector {
 			if moveTo.isOutOfBounds() {
 				break
 			}
-			if occupyingPiece := boardState.getSquare(moveTo.x, moveTo.y); occupyingPiece != nil {
+			if occupyingPiece := boardState.getSquare(moveTo.X, moveTo.Y); occupyingPiece != nil {
 				if occupyingPiece.colour != piece.colour {
-					foundMoves = append(foundMoves, Vector{moveTo.x, moveTo.y})
+					foundMoves = append(foundMoves, Vector{moveTo.X, moveTo.Y})
 				}
 				break
 			}
-			foundMoves = append(foundMoves, Vector{moveTo.x, moveTo.y})
+			foundMoves = append(foundMoves, Vector{moveTo.X, moveTo.Y})
 		}
 	}
 
@@ -91,29 +97,29 @@ func (piece Piece) getPawnMoves(boardState Board) []Vector {
 		colourMult = -1
 	}
 
-	if piece.position.y+colourMult > 0 && piece.position.y+colourMult < 8 && boardState.getSquare(piece.position.x, piece.position.y+colourMult) == nil {
-		foundMoves = append(foundMoves, Vector{piece.position.x, piece.position.y + colourMult})
+	if piece.position.Y+colourMult > 0 && piece.position.Y+colourMult < 8 && boardState.getSquare(piece.position.X, piece.position.Y+colourMult) == nil {
+		foundMoves = append(foundMoves, Vector{piece.position.X, piece.position.Y + colourMult})
 	}
-	if piece.position.x != 7 && piece.position.y+colourMult >= 0 && piece.position.y+colourMult < 8 {
-		if occupyingPiece := boardState.getSquare(piece.position.x+1, piece.position.y+colourMult); occupyingPiece != nil && occupyingPiece.colour != piece.colour {
-			foundMoves = append(foundMoves, Vector{piece.position.x + 1, piece.position.y + colourMult})
+	if piece.position.X != 7 && piece.position.Y+colourMult >= 0 && piece.position.Y+colourMult < 8 {
+		if occupyingPiece := boardState.getSquare(piece.position.X+1, piece.position.Y+colourMult); occupyingPiece != nil && occupyingPiece.colour != piece.colour {
+			foundMoves = append(foundMoves, Vector{piece.position.X + 1, piece.position.Y + colourMult})
 		}
 
-		if occupyingPiece := boardState.getSquare(piece.position.x+1, piece.position.y); occupyingPiece != nil && occupyingPiece.pieceType.sign == "P" && occupyingPiece.position.x == boardState.enPassantRank {
-			foundMoves = append(foundMoves, Vector{piece.position.x + 1, piece.position.y + colourMult})
+		if occupyingPiece := boardState.getSquare(piece.position.X+1, piece.position.Y); occupyingPiece != nil && occupyingPiece.pieceType.sign == "P" && occupyingPiece.position.X == boardState.enPassantRank {
+			foundMoves = append(foundMoves, Vector{piece.position.X + 1, piece.position.Y + colourMult})
 		}
 	}
-	if piece.position.x != 0 && piece.position.y+colourMult >= 0 && piece.position.y+colourMult < 8 {
-		if occupyingPiece := boardState.getSquare(piece.position.x-1, piece.position.y+colourMult); occupyingPiece != nil && occupyingPiece.colour != piece.colour {
-			foundMoves = append(foundMoves, Vector{piece.position.x - 1, piece.position.y + colourMult})
+	if piece.position.X != 0 && piece.position.Y+colourMult >= 0 && piece.position.Y+colourMult < 8 {
+		if occupyingPiece := boardState.getSquare(piece.position.X-1, piece.position.Y+colourMult); occupyingPiece != nil && occupyingPiece.colour != piece.colour {
+			foundMoves = append(foundMoves, Vector{piece.position.X - 1, piece.position.Y + colourMult})
 		}
 
-		if occupyingPiece := boardState.getSquare(piece.position.x-1, piece.position.y); occupyingPiece != nil && occupyingPiece.pieceType.sign == "P" && occupyingPiece.position.x == boardState.enPassantRank {
-			foundMoves = append(foundMoves, Vector{piece.position.x - 1, piece.position.y + colourMult})
+		if occupyingPiece := boardState.getSquare(piece.position.X-1, piece.position.Y); occupyingPiece != nil && occupyingPiece.pieceType.sign == "P" && occupyingPiece.position.X == boardState.enPassantRank {
+			foundMoves = append(foundMoves, Vector{piece.position.X - 1, piece.position.Y + colourMult})
 		}
 	}
-	if piece.canPawnMoveTwo() && boardState.getSquare(piece.position.x, piece.position.y+colourMult) == nil && boardState.getSquare(piece.position.x, piece.position.y+2*colourMult) == nil {
-		foundMoves = append(foundMoves, Vector{piece.position.x, piece.position.y + 2*colourMult})
+	if piece.canPawnMoveTwo() && boardState.getSquare(piece.position.X, piece.position.Y+colourMult) == nil && boardState.getSquare(piece.position.X, piece.position.Y+2*colourMult) == nil {
+		foundMoves = append(foundMoves, Vector{piece.position.X, piece.position.Y + 2*colourMult})
 	}
 
 	return foundMoves
@@ -125,8 +131,8 @@ func (piece Piece) getPossibleMoves(boardState Board) []Vector {
 	for _, move := range piece.pieceType.otherMoves {
 		moveTo := piece.position.add(move)
 		if !moveTo.isOutOfBounds() {
-			if occupyingPiece := boardState.getSquare(moveTo.x, moveTo.y); occupyingPiece == nil || occupyingPiece.colour != piece.colour {
-				foundMoves = append(foundMoves, Vector{moveTo.x, moveTo.y})
+			if occupyingPiece := boardState.getSquare(moveTo.X, moveTo.Y); occupyingPiece == nil || occupyingPiece.colour != piece.colour {
+				foundMoves = append(foundMoves, Vector{moveTo.X, moveTo.Y})
 			}
 		}
 	}
@@ -150,11 +156,11 @@ func (piece Piece) getCoveredSquares(boardState Board) []Vector {
 			if moveTo.isOutOfBounds() {
 				break
 			}
-			if boardState.getSquare(moveTo.x, moveTo.y) != nil {
-				coveredSquares = append(coveredSquares, Vector{moveTo.x, moveTo.y})
+			if boardState.getSquare(moveTo.X, moveTo.Y) != nil {
+				coveredSquares = append(coveredSquares, Vector{moveTo.X, moveTo.Y})
 				break
 			}
-			coveredSquares = append(coveredSquares, Vector{moveTo.x, moveTo.y})
+			coveredSquares = append(coveredSquares, Vector{moveTo.X, moveTo.Y})
 		}
 
 		for i := -1; i > -8; i-- {
@@ -162,35 +168,38 @@ func (piece Piece) getCoveredSquares(boardState Board) []Vector {
 			if moveTo.isOutOfBounds() {
 				break
 			}
-			if boardState.getSquare(moveTo.x, moveTo.y) != nil {
-				coveredSquares = append(coveredSquares, Vector{moveTo.x, moveTo.y})
+			if boardState.getSquare(moveTo.X, moveTo.Y) != nil {
+				coveredSquares = append(coveredSquares, Vector{moveTo.X, moveTo.Y})
 				break
 			}
-			coveredSquares = append(coveredSquares, Vector{moveTo.x, moveTo.y})
+			coveredSquares = append(coveredSquares, Vector{moveTo.X, moveTo.Y})
 		}
 	}
 
 	if piece.pieceType.sign == "P" {
+		if piece.position.Y == 7 || piece.position.Y == 0 {
+			return []Vector{}
+		}
 		if piece.colour == White {
-			if piece.position.x != 0 {
-				coveredSquares = append(coveredSquares, Vector{piece.position.x - 1, piece.position.y + 1})
+			if piece.position.X != 0 {
+				coveredSquares = append(coveredSquares, Vector{piece.position.X - 1, piece.position.Y + 1})
 			}
-			if piece.position.x != 7 {
-				coveredSquares = append(coveredSquares, Vector{piece.position.x + 1, piece.position.y + 1})
+			if piece.position.X != 7 {
+				coveredSquares = append(coveredSquares, Vector{piece.position.X + 1, piece.position.Y + 1})
 			}
 		} else {
-			if piece.position.x != 0 {
-				coveredSquares = append(coveredSquares, Vector{piece.position.x - 1, piece.position.y - 1})
+			if piece.position.X != 0 {
+				coveredSquares = append(coveredSquares, Vector{piece.position.X - 1, piece.position.Y - 1})
 			}
-			if piece.position.x != 7 {
-				coveredSquares = append(coveredSquares, Vector{piece.position.x + 1, piece.position.y - 1})
+			if piece.position.X != 7 {
+				coveredSquares = append(coveredSquares, Vector{piece.position.X + 1, piece.position.Y - 1})
 			}
 		}
 	} else {
 		for _, move := range piece.pieceType.otherMoves {
 			moveTo := piece.position.add(move)
 			if !moveTo.isOutOfBounds() {
-				coveredSquares = append(coveredSquares, Vector{moveTo.x, moveTo.y})
+				coveredSquares = append(coveredSquares, Vector{moveTo.X, moveTo.Y})
 			}
 		}
 	}
@@ -203,7 +212,7 @@ func (piece Piece) isProtecting(otherPiece *Piece, boardState Board) bool {
 		return false
 	}
 	for _, move := range piece.getPossibleMoves(boardState) {
-		if move.x == otherPiece.position.x && move.y == otherPiece.position.y {
+		if move.X == otherPiece.position.X && move.Y == otherPiece.position.Y {
 			return true
 		}
 	}
@@ -215,7 +224,7 @@ func (piece Piece) isAttacking(otherPiece *Piece, boardState Board) bool {
 		return false
 	}
 	for _, move := range piece.getPossibleMoves(boardState) {
-		if move.x == otherPiece.position.x && move.y == otherPiece.position.y {
+		if move.X == otherPiece.position.X && move.Y == otherPiece.position.Y {
 			return true
 		}
 	}
@@ -304,7 +313,7 @@ func (piece Piece) clone() Piece {
 func (piece Piece) canTake(otherPiece Piece, boardState *Board) bool {
 	moves := piece.getPossibleMoves(*boardState)
 	for _, move := range moves {
-		if move.x == otherPiece.position.x && move.y == otherPiece.position.y {
+		if move.X == otherPiece.position.X && move.Y == otherPiece.position.Y {
 			return true
 		}
 	}
