@@ -30,15 +30,19 @@ func (piece Piece) canPawnMoveTwo() bool {
 func (piece Piece) getCastlingMoves(boardState Board) []Vector {
 	castlingMoves := []Vector{}
 	if piece.colour == White {
+		if boardState.isWhiteChecked {
+			return []Vector{}
+		}
 		if boardState.canWhiteQueenSideCastle && boardState.getSquare(1, 0) == nil && boardState.getSquare(2, 0) == nil && boardState.getSquare(3, 0) == nil {
-			bla := boardState.ToString()
-			print(bla)
 			castlingMoves = append(castlingMoves, Vector{0, 2})
 		}
 		if boardState.canWhiteKingSideCastle && boardState.getSquare(5, 0) == nil && boardState.getSquare(6, 0) == nil {
 			castlingMoves = append(castlingMoves, Vector{0, 6})
 		}
 	} else {
+		if boardState.isBlackChecked {
+			return []Vector{}
+		}
 		if boardState.canBlackQueenSideCastle && boardState.getSquare(1, 7) == nil && boardState.getSquare(2, 7) == nil && boardState.getSquare(3, 7) == nil {
 			castlingMoves = append(castlingMoves, Vector{7, 2})
 		}

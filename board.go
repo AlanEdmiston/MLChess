@@ -342,6 +342,15 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 			}
 			nextState.lastMoveString = "O-O"
 		}
+
+		if piece.colour == White {
+			nextState.canWhiteKingSideCastle = false
+			nextState.canWhiteQueenSideCastle = false
+		}
+		if piece.colour == Black {
+			nextState.canBlackKingSideCastle = false
+			nextState.canBlackQueenSideCastle = false
+		}
 	}
 
 	//set new covered squares

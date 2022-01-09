@@ -16,18 +16,7 @@ func tournament(dir string) {
 	for _, file := range files {
 		for _, otherFile := range files {
 			if file.Name() != otherFile.Name() {
-				result := playMatch(file.Name(), otherFile.Name(), dir)
-				print(result)
-				if result == WhiteWon {
-					scores[file.Name()] = scores[file.Name()] + 2
-				}
-				if result == BlackWon {
-					scores[otherFile.Name()] = scores[otherFile.Name()] + 2
-				}
-				if result == Stalemate {
-					scores[file.Name()] = scores[file.Name()] + 1
-					scores[otherFile.Name()] = scores[otherFile.Name()] + 1
-				}
+				playMatchWithResult(file.Name(), otherFile.Name(), dir, scores)
 			}
 		}
 	}
@@ -35,31 +24,44 @@ func tournament(dir string) {
 	print(scores)
 }
 
+func playMatchWithResult(file1, file2, dir string, scores map[string]int) {
+	result := playMatch(file1, file2, dir)
+	print(result)
+	if result == WhiteWon {
+		scores[file1] = scores[file1] + 2
+	}
+	if result == BlackWon {
+		scores[file2] = scores[file2] + 2
+	}
+	if result == Stalemate {
+		scores[file1] = scores[file1] + 1
+		scores[file2] = scores[file2] + 1
+	}
+}
+
 func playMatch(file1, file2, dir string) WinState {
 	config1 := readConfigJson(file1, dir)
 	config2 := readConfigJson(file2, dir)
 	state := NewBoard()
 
+	gameString := "\n----------\n"
+
 	pastStates := []Board{}
-	print("----------\n")
 	for i := 0; i < 200; i++ {
 		pastStates = append(pastStates, state)
 
 		tree := createRoot(4, White, &state, Player1, config1, config2)
 		nextMove := tree.nextMove
-		print(i + 1)
-		print(". ")
-		print(fmt.Sprint(nextMove.lastMoveString))
-		print(" ")
+		gameString += fmt.Sprintf("%d. %s ", i+1, nextMove.lastMoveString)
 		state = *nextMove
 
 		tree = createRoot(4, Black, &state, Player2, config1, config2)
 		nextMove = tree.nextMove
-		print(fmt.Sprint(nextMove.lastMoveString))
-		print(" ")
+		gameString += fmt.Sprint(nextMove.lastMoveString)
 		state = *nextMove
 
 		if state.winner != Undecided {
+			print(gameString)
 			return state.winner
 		}
 
@@ -70,9 +72,10 @@ func playMatch(file1, file2, dir string) WinState {
 			}
 		}
 		if threemoveRuleCount >= 2 {
-			print(state.ToString())
+			print(gameString)
 			return Stalemate
 		}
 	}
+	print(gameString)
 	return Stalemate
 }
