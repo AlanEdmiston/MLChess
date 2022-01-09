@@ -185,7 +185,7 @@ func (boardState Board) isBlackCheckmated() bool {
 
 func (boardState Board) isStalemate() bool {
 	return (!boardState.isBlackChecked && !boardState.isWhiteChecked && len(boardState.getPossibleMoves()) == 0) ||
-		boardState.checkSufficientMaterial(Black) || boardState.checkSufficientMaterial(White) || boardState.fiftyMoveCounter >= 100
+		(!boardState.checkSufficientMaterial(Black) && !boardState.checkSufficientMaterial(White)) || boardState.fiftyMoveCounter >= 100
 }
 
 func (boardState Board) checkSufficientMaterial(colour Colour) bool {
