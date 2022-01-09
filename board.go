@@ -144,9 +144,6 @@ func (boardState Board) getCoveredSquares(colour Colour) [][]bool {
 	for _, piece := range boardState.pieces {
 		if piece.colour == colour {
 			for _, space := range piece.getCoveredSquares(boardState) {
-				if space.X > 7 || space.Y > 7 {
-					print("thing")
-				}
 				squareMap[space.X][space.Y] = true
 			}
 		}

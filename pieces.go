@@ -30,18 +30,20 @@ func (piece Piece) canPawnMoveTwo() bool {
 func (piece Piece) getCastlingMoves(boardState Board) []Vector {
 	castlingMoves := []Vector{}
 	if piece.colour == White {
-		if boardState.canWhiteQueenSideCastle && boardState.getSquare(0, 1) == nil && boardState.getSquare(0, 2) == nil && boardState.getSquare(0, 3) == nil {
+		if boardState.canWhiteQueenSideCastle && boardState.getSquare(1, 0) == nil && boardState.getSquare(2, 0) == nil && boardState.getSquare(3, 0) == nil {
+			bla := boardState.ToString()
+			print(bla)
 			castlingMoves = append(castlingMoves, Vector{0, 2})
 		}
-		if boardState.canWhiteKingSideCastle && boardState.getSquare(0, 5) == nil && boardState.getSquare(0, 6) == nil {
+		if boardState.canWhiteKingSideCastle && boardState.getSquare(5, 0) == nil && boardState.getSquare(6, 0) == nil {
 			castlingMoves = append(castlingMoves, Vector{0, 6})
 		}
 	} else {
-		if boardState.canBlackQueenSideCastle && boardState.getSquare(7, 1) == nil && boardState.getSquare(7, 2) == nil && boardState.getSquare(7, 3) == nil {
+		if boardState.canBlackQueenSideCastle && boardState.getSquare(1, 7) == nil && boardState.getSquare(2, 7) == nil && boardState.getSquare(3, 7) == nil {
 			castlingMoves = append(castlingMoves, Vector{7, 2})
 		}
-		if boardState.canBlackKingSideCastle && boardState.getSquare(7, 5) == nil && boardState.getSquare(7, 6) == nil {
-			castlingMoves = append(castlingMoves, Vector{7, 6})
+		if boardState.canBlackKingSideCastle && boardState.getSquare(5, 7) == nil && boardState.getSquare(6, 7) == nil {
+			castlingMoves = append(castlingMoves, Vector{6, 7})
 		}
 	}
 
