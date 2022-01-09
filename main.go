@@ -6,6 +6,6 @@ type player struct {
 }
 
 func main() {
-	// writeRandomConfigs("./policies/", 10)
+	writeRandomConfigs("./policies/", 10)
 	tournament("./policies/")
 }

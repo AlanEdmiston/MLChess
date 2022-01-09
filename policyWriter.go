@@ -133,65 +133,65 @@ func generateRandomIntMap(length int, sd float64, mean float64) map[int]float64 
 	return intMap
 }
 
-func generateRandomPieceMap(sd float64, mean float64) map[string]float64 {
+func generateRandomPieceMap(sds []float64, means []float64) map[string]float64 {
 	return map[string]float64{
-		"P": rand.NormFloat64()*sd + mean,
-		"R": rand.NormFloat64()*sd + mean,
-		"N": rand.NormFloat64()*sd + mean,
-		"B": rand.NormFloat64()*sd + mean,
-		"Q": rand.NormFloat64()*sd + mean,
-		"K": rand.NormFloat64()*sd + mean,
+		"P": rand.NormFloat64()*sds[0] + means[0],
+		"R": rand.NormFloat64()*sds[1] + means[1],
+		"N": rand.NormFloat64()*sds[2] + means[2],
+		"B": rand.NormFloat64()*sds[3] + means[3],
+		"Q": rand.NormFloat64()*sds[4] + means[4],
+		"K": rand.NormFloat64()*sds[5] + means[5],
 	}
 }
 
 func randomConfigGenerator(name string, dir string) {
 	rand.Seed(time.Now().UnixNano())
 
-	baseValues := generateRandomPieceMap(5, 5)
+	baseValues := generateRandomPieceMap([]float64{0.3, 1.5, 1, 1, 3, 0.6}, []float64{1, 5, 3, 3.25, 9, 2})
 
 	positionMod := map[string]map[Vector]float64{
-		"P": generateRandomVectorMap(0.1, 1),
-		"R": generateRandomVectorMap(0.1, 1),
-		"N": generateRandomVectorMap(0.1, 1),
-		"B": generateRandomVectorMap(0.1, 1),
-		"Q": generateRandomVectorMap(0.1, 1),
-		"K": generateRandomVectorMap(0.1, 1),
+		"P": generateRandomVectorMap(0.6, 2),
+		"R": generateRandomVectorMap(1, 2),
+		"N": generateRandomVectorMap(0.3, 2),
+		"B": generateRandomVectorMap(0.3, 2),
+		"Q": generateRandomVectorMap(1, 2),
+		"K": generateRandomVectorMap(5, 2),
 	}
 
 	remainingAlliedPiecesMod := map[string]map[int]float64{
-		"P": generateRandomIntMap(16, 0.1, 1),
-		"R": generateRandomIntMap(16, 0.1, 1),
-		"N": generateRandomIntMap(16, 0.1, 1),
-		"B": generateRandomIntMap(16, 0.1, 1),
-		"Q": generateRandomIntMap(16, 0.1, 1),
-		"K": generateRandomIntMap(16, 0.1, 1),
+		"P": generateRandomIntMap(16, 0.3, 1),
+		"R": generateRandomIntMap(16, 0.4, 2),
+		"N": generateRandomIntMap(16, 0.3, 1),
+		"B": generateRandomIntMap(16, 0.3, 1),
+		"Q": generateRandomIntMap(16, 1, 3),
+		"K": generateRandomIntMap(16, 1, 1),
 	}
 
 	remainingOpponentPiecesMod := map[string]map[int]float64{
-		"P": generateRandomIntMap(16, 0.1, 1),
-		"R": generateRandomIntMap(16, 0.1, 1),
-		"N": generateRandomIntMap(16, 0.1, 1),
-		"B": generateRandomIntMap(16, 0.1, 1),
-		"Q": generateRandomIntMap(16, 0.1, 1),
-		"K": generateRandomIntMap(16, 0.1, 1),
+		"P": generateRandomIntMap(16, 0.3, 1),
+		"R": generateRandomIntMap(16, 0.4, 2),
+		"N": generateRandomIntMap(16, 0.3, 1),
+		"B": generateRandomIntMap(16, 0.3, 1),
+		"Q": generateRandomIntMap(16, 1, 3),
+		"K": generateRandomIntMap(16, 1, 1),
 	}
 
 	remainingAlliedPiecesTypeMod := map[string]map[string]float64{
-		"P": generateRandomPieceMap(0.2, 1),
-		"R": generateRandomPieceMap(0.2, 1),
-		"N": generateRandomPieceMap(0.2, 1),
-		"B": generateRandomPieceMap(0.2, 1),
-		"Q": generateRandomPieceMap(0.2, 1),
-		"K": generateRandomPieceMap(0.2, 1),
+		"P": generateRandomPieceMap([]float64{0.03, 0.1, 0.1, 0.1, 0.1, 0.1}, []float64{0, 1, 1, 1, 1, 1}),
+		"R": generateRandomPieceMap([]float64{0.03, 0.4, 0.4, 0.4, 0.4, 0.4}, []float64{0, 1, 1, 1, 1, 1}),
+		"N": generateRandomPieceMap([]float64{0.03, 0.3, 0.3, 0.3, 0.3, 0.3}, []float64{0, 1, 1, 1, 1, 1}),
+		"B": generateRandomPieceMap([]float64{0.03, 0.3, 0.3, 0.3, 0.3, 0.3}, []float64{0, 1, 1, 1, 1, 1}),
+		"Q": generateRandomPieceMap([]float64{0.03, 0.6, 0.6, 0.6, 0.6, 0.6}, []float64{0, 1, 1, 1, 1, 1}),
+		"K": generateRandomPieceMap([]float64{0.03, 0.4, 0.4, 0.4, 0.4, 0.4}, []float64{0, 1, 1, 1, 1, 1}),
 	}
 
 	remainingOpponentPiecesTypeMod := map[string]map[string]float64{
-		"P": generateRandomPieceMap(0.2, 1),
-		"R": generateRandomPieceMap(0.2, 1),
-		"N": generateRandomPieceMap(0.2, 1),
-		"B": generateRandomPieceMap(0.2, 1),
-		"Q": generateRandomPieceMap(0.2, 1),
-		"K": generateRandomPieceMap(0.2, 1),
+		"P": generateRandomPieceMap([]float64{0.03, 0.1, 0.1, 0.1, 0.1, 0.1}, []float64{0, 1, 1, 1, 1, 1}),
+		"R": generateRandomPieceMap([]float64{0.03, 0.4, 0.4, 0.4, 0.4, 0.4}, []float64{0, 1, 1, 1, 1, 1}),
+		"N": generateRandomPieceMap([]float64{0.03, 0.3, 0.3, 0.3, 0.3, 0.3}, []float64{0, 1, 1, 1, 1, 1}),
+		"B": generateRandomPieceMap([]float64{0.03, 0.3, 0.3, 0.3, 0.3, 0.3}, []float64{0, 1, 1, 1, 1, 1}),
+		"Q": generateRandomPieceMap([]float64{0.03, 0.6, 0.6, 0.6, 0.6, 0.6}, []float64{0, 1, 1, 1, 1, 1}),
+		"K": generateRandomPieceMap([]float64{0.03, 0.4, 0.4, 0.4, 0.4, 0.4}, []float64{0, 1, 1, 1, 1, 1}),
 	}
 
 	// possibleMovesMult              map[string]float64
@@ -211,7 +211,7 @@ func randomConfigGenerator(name string, dir string) {
 
 	squareBaseValues := generateRandomVectorMap(0.02, 0.2)
 
-	coveredByMod := generateRandomPieceMap(0.1, 1)
+	coveredByMod := generateRandomPieceMap([]float64{0.25, 0.25, 0.25, 0.25, 0.25, 0.25}, []float64{1, 1, 1, 1, 1, 1})
 
 	config := PieceValueConfig{
 		BaseValues:                     baseValues,
