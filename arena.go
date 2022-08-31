@@ -46,17 +46,16 @@ func playMatch(file1, file2, dir string) WinState {
 
 	gameString := "\n----------\n"
 
-	pastStates := []Board{}
-	for i := 0; i < 200; i++ {
-		pastStates = append(pastStates, state)
-
+	for i := 0; i < 100; i++ {
 		tree := createRoot(4, White, &state, Player1, config1, config2)
 		nextMove := tree.nextMove
+		print(fmt.Sprintf("%d. %s ", i+1, nextMove.lastMoveString))
 		gameString += fmt.Sprintf("%d. %s ", i+1, nextMove.lastMoveString)
 		state = *nextMove
 
 		tree = createRoot(4, Black, &state, Player2, config1, config2)
 		nextMove = tree.nextMove
+		print(fmt.Sprint(nextMove.lastMoveString))
 		gameString += fmt.Sprint(nextMove.lastMoveString)
 		state = *nextMove
 
@@ -65,16 +64,6 @@ func playMatch(file1, file2, dir string) WinState {
 			return state.winner
 		}
 
-		threemoveRuleCount := 0
-		for _, pastState := range pastStates {
-			if pastState.ToString() == state.ToString() {
-				threemoveRuleCount++
-			}
-		}
-		if threemoveRuleCount >= 2 {
-			print(gameString)
-			return Stalemate
-		}
 	}
 	print(gameString)
 	return Stalemate

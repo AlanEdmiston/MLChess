@@ -85,9 +85,11 @@ func newMinimaxTree(boardState Board, parent *MinimaxTree, config1 *PieceValueCo
 		//switch out heuristic here
 		switch parent.strategy {
 		case Player1:
-			value = generalHeuristic(&boardState, config1)
+			value = verySimpleHeuristic(boardState)
+			// value = generalHeuristic(&boardState, config1)
 		case Player2:
-			value = generalHeuristic(&boardState, config2)
+			value = verySimpleHeuristic(boardState)
+			// value = generalHeuristic(&boardState, config2)
 		default:
 			value = verySimpleHeuristic(boardState)
 		}
@@ -179,6 +181,15 @@ func newMinimaxTree(boardState Board, parent *MinimaxTree, config1 *PieceValueCo
 }
 
 func verySimpleHeuristic(board Board) float64 {
+	if board.isStalemate() {
+		return 0
+	}
+	if board.isBlackCheckmated() {
+		return math.Inf(1)
+	}
+	if board.isWhiteCheckmated() {
+		return math.Inf(-1)
+	}
 	total := 0.0
 	for _, piece := range board.pieces {
 		colourMult := 1.0

@@ -50,11 +50,15 @@ type Board struct {
 	lastMoveString          string
 	moveCounter             int
 	fiftyMoveCounter        int
+	pastStates              []string
+	threeMoveCount          int
 }
 
 //BoardInitialise initialises a Board
 func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, canBlackKingSideCastle, canBlackQueenSideCastle, canWhiteKingSideCastle, canWhiteQueenSideCastle bool, lastMoveString string, moveCounter, fiftyMoveCounter int) Board {
 	squares := make([][]*Piece, 8)
+	pastStates := []string{}
+	threeMoveCount := 0
 	for i := 0; i < 8; i++ {
 		squares[i] = make([]*Piece, 8)
 	}
@@ -86,26 +90,14 @@ func BoardInitialise(pieces []*Piece, enPassantRank int, colourToMove Colour, ca
 		lastMoveString,
 		moveCounter,
 		fiftyMoveCounter,
+		pastStates,
+		threeMoveCount,
 	}
 
 	returnState.coveredSquaresWhite = returnState.getCoveredSquares(White)
 	returnState.coveredSquaresBlack = returnState.getCoveredSquares(Black)
 	returnState.isWhiteChecked = returnState.getIsWhiteChecked()
 	returnState.isBlackChecked = returnState.getIsBlackChecked()
-
-	isBlackMated := returnState.isBlackCheckmated()
-	isWhiteMated := returnState.isWhiteCheckmated()
-	isStale := returnState.isStalemate()
-
-	if isBlackMated {
-		returnState.winner = WhiteWon
-	}
-	if isWhiteMated {
-		returnState.winner = BlackWon
-	}
-	if isStale {
-		returnState.winner = Stalemate
-	}
 
 	returnState.children = returnState.getPossibleMoves()
 
@@ -176,16 +168,16 @@ func (boardState Board) getIsBlackChecked() bool {
 }
 
 func (boardState Board) isWhiteCheckmated() bool {
-	return boardState.isWhiteChecked && len(boardState.getPossibleMoves()) == 0
+	return boardState.isWhiteChecked && !boardState.hasPossibleBoardMoves()
 }
 
 func (boardState Board) isBlackCheckmated() bool {
-	return boardState.isBlackChecked && len(boardState.getPossibleMoves()) == 0
+	return boardState.isBlackChecked && !boardState.hasPossibleBoardMoves()
 }
 
 func (boardState Board) isStalemate() bool {
-	return (!boardState.isBlackChecked && !boardState.isWhiteChecked && len(boardState.getPossibleMoves()) == 0) ||
-		(!boardState.checkSufficientMaterial(Black) && !boardState.checkSufficientMaterial(White)) || boardState.fiftyMoveCounter >= 100
+	return (!boardState.isBlackChecked && !boardState.isWhiteChecked && !boardState.hasPossibleBoardMoves()) ||
+		(!boardState.checkSufficientMaterial(Black) && !boardState.checkSufficientMaterial(White)) || boardState.fiftyMoveCounter >= 100 || boardState.threeMoveCount >= 2
 }
 
 func (boardState Board) checkSufficientMaterial(colour Colour) bool {
@@ -220,8 +212,7 @@ func (boardState Board) checkSufficientMaterial(colour Colour) bool {
 	return false
 }
 
-//ToString converts board to string
-func (boardState Board) ToString() string {
+func (boardState Board) SimpleString() string {
 	out := ""
 	blankSpaceCounter := 0
 	for y, column := range boardState.squares {
@@ -269,6 +260,12 @@ func (boardState Board) ToString() string {
 	if !boardState.canWhiteKingSideCastle && !boardState.canWhiteQueenSideCastle && !boardState.canBlackKingSideCastle && !boardState.canBlackQueenSideCastle {
 		out += "-"
 	}
+	return out
+}
+
+//ToString converts board to string
+func (boardState Board) ToString() string {
+	out := boardState.SimpleString()
 
 	out += fmt.Sprintf(" %d %d", boardState.fiftyMoveCounter, boardState.moveCounter)
 	return out
@@ -305,6 +302,8 @@ func (boardState Board) clone() Board {
 		boardState.lastMoveString,
 		boardState.moveCounter,
 		boardState.fiftyMoveCounter,
+		boardState.pastStates,
+		boardState.threeMoveCount,
 	}
 }
 
@@ -420,17 +419,17 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 
 	if pieceDouble.pieceType.sign == "R" {
 		if pieceDouble.colour == White {
-			if piece.position.X == 7 && pieceDouble.position.Y == 0 {
+			if piece.position.X == 7 && piece.position.Y == 0 {
 				nextState.canWhiteKingSideCastle = false
 			}
-			if piece.position.X == 0 && pieceDouble.position.Y == 0 {
+			if piece.position.X == 0 && piece.position.Y == 0 {
 				nextState.canWhiteQueenSideCastle = false
 			}
 		} else {
-			if piece.position.X == 7 && pieceDouble.position.Y == 7 {
+			if piece.position.X == 7 && piece.position.Y == 7 {
 				nextState.canBlackKingSideCastle = false
 			}
-			if piece.position.X == 0 && pieceDouble.position.Y == 7 {
+			if piece.position.X == 0 && piece.position.Y == 7 {
 				nextState.canBlackQueenSideCastle = false
 			}
 		}
@@ -454,6 +453,26 @@ func (boardState Board) MakeMove(piece *Piece, move Vector, promotion *PieceType
 		nextState.moveCounter++
 	} else {
 		nextState.colourToMove = White
+	}
+
+	nextState.pastStates = append(boardState.pastStates, boardState.SimpleString())
+	// if piece.pieceType.sign == "P" {
+	// 	nextState.pastStates = []string{}
+	// }
+	for _, pastState := range nextState.pastStates {
+		if pastState == nextState.SimpleString() {
+			nextState.threeMoveCount++
+		}
+	}
+
+	// if nextState.isBlackChecked && len(nextState.children) == 0 {
+	// 	nextState.winner = WhiteWon
+	// }
+	// if nextState.isWhiteChecked && len(nextState.children) == 0 {
+	// 	nextState.winner = BlackWon
+	// }
+	if (!boardState.checkSufficientMaterial(Black) && !boardState.checkSufficientMaterial(White)) || boardState.fiftyMoveCounter >= 100 || boardState.threeMoveCount >= 2 {
+		nextState.winner = Stalemate
 	}
 
 	return nextState
@@ -492,6 +511,17 @@ func (boardState Board) getPossibleMoves() []*Board {
 		}
 	}
 	return returnStates
+}
+
+func (boardState Board) hasPossibleBoardMoves() bool {
+	for _, piece := range boardState.pieces {
+		if piece.colour == boardState.colourToMove {
+			if piece.hasPossibleMoves(boardState) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (boardState Board) verifyBoardState() bool {

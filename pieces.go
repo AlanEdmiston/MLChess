@@ -147,6 +147,79 @@ func (piece Piece) getPossibleMoves(boardState Board) []Vector {
 	return foundMoves
 }
 
+func (piece Piece) hasPossibleMoves(boardState Board) bool {
+	for _, direction := range piece.pieceType.moveDirections {
+		for i := 1; i < 8; i++ {
+			moveTo := piece.position.add(direction.mult(i))
+			if moveTo.isOutOfBounds() {
+				break
+			}
+			if occupyingPiece := boardState.getSquare(moveTo.X, moveTo.Y); occupyingPiece != nil {
+				if occupyingPiece.colour != piece.colour {
+					nextState := boardState.MakeMove(&piece, moveTo, nil)
+					if nextState.verifyBoardState() {
+						return true
+					}
+				}
+				break
+			}
+			nextState := boardState.MakeMove(&piece, moveTo, nil)
+			if nextState.verifyBoardState() {
+				return true
+			}
+		}
+
+		for i := -1; i > -8; i-- {
+			moveTo := piece.position.add(direction.mult(i))
+			if moveTo.isOutOfBounds() {
+				break
+			}
+			if occupyingPiece := boardState.getSquare(moveTo.X, moveTo.Y); occupyingPiece != nil {
+				if occupyingPiece.colour != piece.colour {
+					nextState := boardState.MakeMove(&piece, moveTo, nil)
+					if nextState.verifyBoardState() {
+						return true
+					}
+				}
+				break
+			}
+			nextState := boardState.MakeMove(&piece, moveTo, nil)
+			if nextState.verifyBoardState() {
+				return true
+			}
+		}
+	}
+
+	for _, move := range piece.pieceType.otherMoves {
+		moveTo := piece.position.add(move)
+		if !moveTo.isOutOfBounds() {
+			if occupyingPiece := boardState.getSquare(moveTo.X, moveTo.Y); occupyingPiece == nil || occupyingPiece.colour != piece.colour {
+				nextState := boardState.MakeMove(&piece, moveTo, nil)
+				if nextState.verifyBoardState() {
+					return true
+				}
+			}
+		}
+	}
+
+	if piece.pieceType.sign == "K" {
+		if len(piece.getCastlingMoves(boardState)) > 0 {
+			return true
+		}
+	}
+
+	if piece.pieceType.sign == "P" {
+		pawnMoves := piece.getPawnMoves(boardState)
+		for _, m := range pawnMoves {
+			nextState := boardState.MakeMove(&piece, m, nil)
+			if nextState.verifyBoardState() {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (piece Piece) getCoveredSquares(boardState Board) []Vector {
 	coveredSquares := []Vector{}
 
